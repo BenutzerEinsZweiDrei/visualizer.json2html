@@ -33,8 +33,7 @@ function visualizeData(jsonData) {
     });
 }
 
-        
-// Function to fetch a single bin data by its bin ID
+        // Function to fetch a single bin data by its bin ID
 async function fetchAndDisplayNames() {
     const ids = [
         "",
@@ -49,11 +48,10 @@ async function fetchAndDisplayNames() {
     const baseUrl = "https://api.jsonbin.io/v3/c/66efaf65ad19ca34f8aa8148/bins/";
     const masterKey = "$2a$10$y9uBtJE8vwgFyfUEWmG2KejF8KLAg1vpe/WbcbQAC5zlhUJ1Obn6W";
     
-    // To store the results from each fetch
     let mergedData = [];
 
     try {
-        // Fetch each ID one by one
+        // Loop through the IDs synchronously
         for (const id of ids) {
             try {
                 const response = await fetch(`${baseUrl}${id}`, {
@@ -68,11 +66,14 @@ async function fetchAndDisplayNames() {
 
                 const data = await response.json();
 
-                // Check if 'data' contains an array (e.g., 'names' or some relevant field)
+                // Log the data to debug
+                console.log(`Data fetched for ID ${id}:`, data);
+
+                // Merge data (assumes array or array in 'items')
                 if (Array.isArray(data)) {
-                    mergedData = mergedData.concat(data); // Append if 'data' is an array
-                } else if (data && Array.isArray(data.items)) { // If the data has a specific field
-                    mergedData = mergedData.concat(data.items); // Adjust the field name based on your structure
+                    mergedData = mergedData.concat(data);
+                } else if (data && Array.isArray(data.items)) {
+                    mergedData = mergedData.concat(data.items);
                 } else {
                     console.warn(`Unexpected format for data with ID ${id}`);
                 }
@@ -81,14 +82,18 @@ async function fetchAndDisplayNames() {
                 console.error(`Error fetching data for ID ${id}:`, error);
             }
         }
-        
-        // Once all fetches are done, display the merged data
+
+        // Log the total length of mergedData to debug the issue
+        console.log(`Total items in mergedData: ${mergedData.length}`);
+
+        // Display the names once all fetches are complete
         displayNames(mergedData);
 
     } catch (error) {
         console.error("Unexpected error:", error);
     }
 }
+
 
 
 
