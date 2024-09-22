@@ -32,8 +32,6 @@ function visualizeData(jsonData) {
         _visualizer.visualize(jsonData);
     });
 }
-
-        // Function to fetch a single bin data by its bin ID
 async function fetchAndDisplayNames() {
     const ids = [
         "",
@@ -47,51 +45,46 @@ async function fetchAndDisplayNames() {
 
     const baseUrl = "https://api.jsonbin.io/v3/c/66efaf65ad19ca34f8aa8148/bins/";
     const masterKey = "$2a$10$y9uBtJE8vwgFyfUEWmG2KejF8KLAg1vpe/WbcbQAC5zlhUJ1Obn6W";
-    
     let mergedData = [];
 
-    try {
-        // Loop through the IDs synchronously
-        for (const id of ids) {
-            try {
-                const response = await fetch(`${baseUrl}${id}`, {
-                    headers: {
-                        "X-Master-Key": masterKey
-                    }
-                });
+    const fetchWithTimeout = async (url, options, timeout = 5000) => {
+        return Promise.race([
+            fetch(url, options),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out')), timeout))
+        ]);
+    };
 
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch data for ID ${id}: ${response.statusText}`);
+    for (const id of ids) {
+        try {
+            const response = await fetchWithTimeout(`${baseUrl}${id}`, {
+                headers: {
+                    "X-Master-Key": masterKey
                 }
+            });
 
-                const data = await response.json();
-
-                // Log the data to debug
-                console.log(`Data fetched for ID ${id}:`, data);
-
-                // Merge data (assumes array or array in 'items')
-                if (Array.isArray(data)) {
-                    mergedData = mergedData.concat(data);
-                } else if (data && Array.isArray(data.items)) {
-                    mergedData = mergedData.concat(data.items);
-                } else {
-                    console.warn(`Unexpected format for data with ID ${id}`);
-                }
-
-            } catch (error) {
-                console.error(`Error fetching data for ID ${id}:`, error);
+            if (!response.ok) {
+                console.error(`Error fetching ID ${id}: ${response.statusText}`);
+                continue; // Skip to the next ID
             }
+
+            const data = await response.json();
+            console.log(`Fetched data for ID ${id}:`, data);
+
+            if (Array.isArray(data)) {
+                mergedData.push(...data);
+            } else if (data && Array.isArray(data.items)) {
+                mergedData.push(...data.items);
+            } else {
+                console.warn(`Unexpected data format for ID ${id}`);
+            }
+
+        } catch (error) {
+            console.error(`Error for ID ${id}:`, error);
         }
-
-        // Log the total length of mergedData to debug the issue
-        console.log(`Total items in mergedData: ${mergedData.length}`);
-
-        // Display the names once all fetches are complete
-        displayNames(mergedData);
-
-    } catch (error) {
-        console.error("Unexpected error:", error);
     }
+
+    console.log(`Total items in mergedData: ${mergedData.length}`);
+    displayNames(mergedData);
 }
 
 
