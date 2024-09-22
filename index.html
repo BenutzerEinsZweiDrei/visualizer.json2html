@@ -32,6 +32,8 @@ function visualizeData(jsonData) {
         _visualizer.visualize(jsonData);
     });
 }
+
+        
 // Function to fetch a single bin data by its bin ID
 async function fetchAndDisplayNames() {
     const ids = [
@@ -65,7 +67,15 @@ async function fetchAndDisplayNames() {
                 }
 
                 const data = await response.json();
-                mergedData = mergedData.concat(data); // Append the current response to the mergedData
+
+                // Check if 'data' contains an array (e.g., 'names' or some relevant field)
+                if (Array.isArray(data)) {
+                    mergedData = mergedData.concat(data); // Append if 'data' is an array
+                } else if (data && Array.isArray(data.items)) { // If the data has a specific field
+                    mergedData = mergedData.concat(data.items); // Adjust the field name based on your structure
+                } else {
+                    console.warn(`Unexpected format for data with ID ${id}`);
+                }
 
             } catch (error) {
                 console.error(`Error fetching data for ID ${id}:`, error);
@@ -79,6 +89,7 @@ async function fetchAndDisplayNames() {
         console.error("Unexpected error:", error);
     }
 }
+
 
 
 
