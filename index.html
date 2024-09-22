@@ -14,22 +14,101 @@
 </head>
 
 <body>
+    <h1>Records</h1>
+    <ul id="name-list"></ul>
     <div id="output"></div>
 </body>
 
-<script>
+
     
-    var json = {"header":{"version":"0.0.8","status":1,"message":""},"response":[{"product":"Classic Cars","count":38},{"product":"Motorcycles","count":13},{"product":"Planes","count":12},{"product":"Ships","count":9},{"product":"Trains","count":3},{"product":"Trucks and Buses","count":11},{"product":"Vintage Cars","count":24}]};
-    
-    $(function(){
+    <script>
+// Function to visualize the fetched JSON data
+function visualizeData(jsonData) {
+    $(function() {
+        // Ensure the document is fully loaded before creating the visualizer
+        var _visualizer = new visualizer($("#output"));
         
-    	//Create a new visualizer object
-    	var _visualizer = new visualizer($("#output"));
-    	
-    	//Visualize the demo json object
-    	_visualizer.visualize(json);
-    
+        // Use the visualizer object to render the JSON data
+        _visualizer.visualize(jsonData);
     });
+}
+
+// Function to fetch a single bin data by its bin ID
+async function fetchBinData(binId) {
+    const url = `https://api.jsonbin.io/v3/b/${binId}`;
+  
+    try {
+        const response = await fetch(url, {
+            headers: {
+                "X-Master-Key": "$2a$10$y9uBtJE8vwgFyfUEWmG2KejF8KLAg1vpe/WbcbQAC5zlhUJ1Obn6W"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch bin data: ${response.statusText}`);
+        }
+
+        const json = await response.json();
+        // Visualize the fetched JSON data
+        visualizeData(json);
+    } catch (error) {
+        console.error("Error fetching bin data:", error);
+    }
+}
+
+// Function to fetch a list of names from the collection and display them
+async function fetchAndDisplayNames() {
+    const url = "https://api.jsonbin.io/v3/c/66efaf65ad19ca34f8aa8148/bins";
+  
+    try {
+        const response = await fetch(url, {
+            headers: {
+                "X-Master-Key": "$2a$10$y9uBtJE8vwgFyfUEWmG2KejF8KLAg1vpe/WbcbQAC5zlhUJ1Obn6W"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch name list: ${response.statusText}`);
+        }
+
+        const responseData = await response.json();
+
+        // Call the function to display names from the fetched data
+        displayNames(responseData);
+    } catch (error) {
+        console.error("Error fetching name list:", error);
+    }
+}
+
+// Function to display names in a list
+function displayNames(data) {
+    const nameList = document.getElementById('name-list');
+    nameList.innerHTML = ''; // Clear previous list if any
+
+    // Iterate through each item in the data and create a list element
+    data.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.snippetMeta.name;
+
+        // Add click event listener to fetch the associated record data
+        li.addEventListener('click', () => fetchRecord(item.record));
+
+        // Append the list item to the list element
+        nameList.appendChild(li);
+    });
+}
+
+// Function to fetch and visualize the record data by its record ID
+function fetchRecord(recordId) {
+    fetchBinData(recordId);
+}
+
+// Call fetchAndDisplayNames on page load to populate the list
+$(document).ready(function() {
+    fetchAndDisplayNames();
+});
 </script>
+
+
 
 </html>
